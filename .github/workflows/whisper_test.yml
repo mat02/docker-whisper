@@ -148,6 +148,25 @@ jobs:
           echo "$stream_output" | grep -q '"transcript.text.done"'
           echo "$stream_output" | grep -q '\[DONE\]'
 
+          # Test word-level timestamps (verbose_json with word_timestamps=true)
+          wt_output=$(curl -sf http://127.0.0.1:9000/v1/audio/transcriptions \
+            "${whisper_curl_args[@]}" \
+            -F file=@/tmp/test.wav -F model=whisper-1 \
+            -F response_format=verbose_json -F word_timestamps=true)
+          echo "$wt_output" | grep -q '"segments"'
+
+          # Test translation endpoint (json format)
+          curl -sf http://127.0.0.1:9000/v1/audio/translations \
+            "${whisper_curl_args[@]}" \
+            -F file=@/tmp/test.wav -F model=whisper-1 \
+            | grep -q '"text"'
+
+          # Test translation endpoint (verbose_json format)
+          curl -sf http://127.0.0.1:9000/v1/audio/translations \
+            "${whisper_curl_args[@]}" \
+            -F file=@/tmp/test.wav -F model=whisper-1 -F response_format=verbose_json \
+            | grep -q '"translate"'
+
           docker restart "$TEST_ID"
 
           sleep 15
