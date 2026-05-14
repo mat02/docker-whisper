@@ -10,7 +10,7 @@
 
 **功能特性：**
 
-- OpenAI 兼容的 `POST /v1/audio/transcriptions` 接口 — 任何调用 OpenAI Whisper API 的应用只需修改一行配置即可切换
+- OpenAI 兼容的 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations` 接口 — 任何调用 OpenAI Whisper API 的应用只需修改一行配置即可切换
 - 支持所有 Whisper 模型：`tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 等
 - 通过辅助脚本 (`whisper_manage`) 管理模型
 - 音频数据留在您的服务器上，不发送给第三方
@@ -167,6 +167,7 @@ docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 | `WHISPER_LOG_LEVEL` | 日志级别：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
 | `WHISPER_BEAM` | 转录解码的 beam 大小。较大的值可能以速度换取精度。使用 `1` 可获得最快的贪婪解码。 | `5` |
 | `WHISPER_LOCAL_ONLY` | 设为任意非空值（如 `true`）时，禁止所有 HuggingFace 模型下载。适用于预先缓存模型的离线或隔离网络部署。 | *（未设置）* |
+| `WHISPER_WORD_TIMESTAMPS` | 设为 `true` 时，全局启用词级时间戳。`verbose_json` 输出中每个片段将包含 `words` 数组，含每个词的起止时间和置信度。也可按请求启用。 | *（未设置）* |
 
 **注：** 在 `env` 文件中，值可用单引号括起，例如 `VAR='value'`。`=` 两侧不要有空格。如更改 `WHISPER_PORT`，请相应更新 `docker run` 命令中的 `-p` 参数。
 
@@ -273,7 +274,7 @@ volumes:
 
 ## API 参考
 
-该 API 与 [OpenAI 音频转录接口](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)完全兼容。任何已调用 `https://api.openai.com/v1/audio/transcriptions` 的应用，只需设置以下环境变量即可切换到自托管服务：
+该 API 与 OpenAI 的[音频转录接口](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)和[音频翻译接口](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)完全兼容。任何已调用 `https://api.openai.com/v1/audio/transcriptions` 的应用，只需设置以下环境变量即可切换到自托管服务：
 
 ```
 OPENAI_BASE_URL=http://您的服务器IP:9000
@@ -297,6 +298,7 @@ Content-Type: multipart/form-data
 | `response_format` | 字符串 | — | 输出格式，默认为 `json`。请参阅[响应格式](#响应格式)。`stream=true` 时忽略此参数。 |
 | `temperature` | 浮点数 | — | 采样温度（0–1），默认为 `0`。 |
 | `stream` | 布尔值 | — | 启用 SSE 流式传输。为 `true` 时，段落将在解码时以 `text/event-stream` 事件形式返回。默认为 `false`。 |
+| `word_timestamps` | 布尔值 | — | 提取词级时间戳。为 `true` 时，`verbose_json` 输出中每个片段包含 `words` 数组。默认为 `false`（或 `WHISPER_WORD_TIMESTAMPS` 环境变量）。 |
 
 **示例：**
 
@@ -402,6 +404,46 @@ curl http://您的服务器IP:9000/v1/audio/transcriptions \
     -F file=@audio.mp3 \
     -F model=whisper-1 \
     -F response_format=verbose_json
+```
+
+**示例 — 带词级时间戳的详细 JSON：**
+
+```bash
+curl http://您的服务器IP:9000/v1/audio/transcriptions \
+    -F file=@audio.mp3 \
+    -F model=whisper-1 \
+    -F response_format=verbose_json \
+    -F word_timestamps=true
+```
+
+当 `word_timestamps=true` 时，`verbose_json` 响应中每个片段包含 `words` 数组：
+
+```json
+{
+  "word": "hello",
+  "start": 0.5,
+  "end": 0.8,
+  "probability": 0.98
+}
+```
+
+### 翻译音频
+
+```
+POST /v1/audio/translations
+Content-Type: multipart/form-data
+```
+
+将任意语言的音频翻译为英文文本。与 [OpenAI 音频翻译接口](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)兼容。接受与转录接口相同的参数。输出始终为英文。
+
+> **注意：** 仅英语（`.en`）模型不支持翻译。请使用多语言模型（如 `base`、`small`、`large-v3-turbo`）。
+
+**示例：**
+
+```bash
+curl http://您的服务器IP:9000/v1/audio/translations \
+    -F file=@french_audio.mp3 \
+    -F model=whisper-1
 ```
 
 ### 列出模型

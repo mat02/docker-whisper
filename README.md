@@ -10,7 +10,7 @@ Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-tex
 
 **Features:**
 
-- OpenAI-compatible `POST /v1/audio/transcriptions` endpoint — any app using the OpenAI Whisper API switches with a one-line change
+- OpenAI-compatible `POST /v1/audio/transcriptions` and `POST /v1/audio/translations` endpoints — any app using the OpenAI Whisper API switches with a one-line change
 - Supports all Whisper models: `tiny`, `base`, `small`, `medium`, `large-v3`, `large-v3-turbo` and more
 - Model management via a helper script (`whisper_manage`)
 - Audio stays on your server — no data sent to third parties
@@ -167,6 +167,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `WHISPER_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
 | `WHISPER_BEAM` | Beam size for transcription decoding. Higher values may improve accuracy at the cost of speed. Use `1` for fastest (greedy) decoding. | `5` |
 | `WHISPER_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached models. | *(not set)* |
+| `WHISPER_WORD_TIMESTAMPS` | When set to `true`, enables word-level timestamps globally for all requests. Each segment in `verbose_json` output will include a `words` array with per-word timing and confidence. Can also be enabled per-request. | *(not set)* |
 
 **Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `WHISPER_PORT`, update the `-p` flag in the `docker run` command accordingly.
 
@@ -273,7 +274,7 @@ volumes:
 
 ## API reference
 
-The API is fully compatible with [OpenAI's audio transcription endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create). Any application already calling `https://api.openai.com/v1/audio/transcriptions` can switch to self-hosted by setting:
+The API is fully compatible with OpenAI's [audio transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create) and [audio translation](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create) endpoints. Any application already calling `https://api.openai.com/v1/audio/transcriptions` can switch to self-hosted by setting:
 
 ```
 OPENAI_BASE_URL=http://your_server_ip:9000
@@ -297,6 +298,7 @@ Content-Type: multipart/form-data
 | `response_format` | string | — | Output format. Default: `json`. See [response formats](#response-formats). Ignored when `stream=true`. |
 | `temperature` | float | — | Sampling temperature (0–1). Default: `0`. |
 | `stream` | boolean | — | Enable SSE streaming. When `true`, segments are returned as `text/event-stream` events as they are decoded. Default: `false`. |
+| `word_timestamps` | boolean | — | Extract word-level timestamps. When `true`, `verbose_json` output includes a `words` array in each segment. Default: `false` (or `WHISPER_WORD_TIMESTAMPS` env var). |
 
 **Example:**
 
@@ -402,6 +404,46 @@ curl http://your_server_ip:9000/v1/audio/transcriptions \
     -F file=@audio.mp3 \
     -F model=whisper-1 \
     -F response_format=verbose_json
+```
+
+**Example — verbose JSON with word-level timestamps:**
+
+```bash
+curl http://your_server_ip:9000/v1/audio/transcriptions \
+    -F file=@audio.mp3 \
+    -F model=whisper-1 \
+    -F response_format=verbose_json \
+    -F word_timestamps=true
+```
+
+When `word_timestamps=true`, each segment in the `verbose_json` response includes a `words` array:
+
+```json
+{
+  "word": "hello",
+  "start": 0.5,
+  "end": 0.8,
+  "probability": 0.98
+}
+```
+
+### Translate audio
+
+```
+POST /v1/audio/translations
+Content-Type: multipart/form-data
+```
+
+Translates audio in any language to English text. Drop-in replacement for [OpenAI's audio translation endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create). Accepts the same parameters as the transcription endpoint. The output is always in English.
+
+> **Note:** Translation is not supported with English-only (`.en`) models. Use a multilingual model (e.g. `base`, `small`, `large-v3-turbo`).
+
+**Example:**
+
+```bash
+curl http://your_server_ip:9000/v1/audio/translations \
+    -F file=@french_audio.mp3 \
+    -F model=whisper-1
 ```
 
 ### List models
