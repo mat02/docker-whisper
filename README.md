@@ -6,7 +6,7 @@
 
 Part of the [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack) — deploy a complete self-hosted AI stack with a single command.
 
-Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-text server, powered by [faster-whisper](https://github.com/SYSTRAN/faster-whisper). Provides an OpenAI-compatible audio transcription API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
+Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-text server, powered by [faster-whisper](https://github.com/SYSTRAN/faster-whisper). Provides OpenAI-compatible audio transcription and translation APIs. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
 **Features:**
 

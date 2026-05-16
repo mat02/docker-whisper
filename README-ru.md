@@ -6,7 +6,7 @@
 
 Часть [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-ru.md) — разверните полный самостоятельно размещённый AI-стек одной командой.
 
-Docker-образ для запуска сервера распознавания речи [Whisper](https://github.com/openai/whisper) на базе [faster-whisper](https://github.com/SYSTRAN/faster-whisper). Предоставляет совместимый с OpenAI API для транскрибирования аудио. Основан на Debian (python:3.12-slim). Простой, приватный, для самостоятельного развёртывания.
+Docker-образ для запуска сервера распознавания речи [Whisper](https://github.com/openai/whisper) на базе [faster-whisper](https://github.com/SYSTRAN/faster-whisper). Предоставляет совместимые с OpenAI API для транскрибирования и перевода аудио. Основан на Debian (python:3.12-slim). Простой, приватный, для самостоятельного развёртывания.
 
 **Возможности:**
 

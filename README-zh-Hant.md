@@ -6,7 +6,7 @@
 
 [Docker AI Stack](https://github.com/hwdsl2/docker-ai-stack/blob/main/README-zh-Hant.md) 的一部分 ─ 一條命令部署完整的自託管 AI 技術棧。
 
-使用 [faster-whisper](https://github.com/SYSTRAN/faster-whisper) 在 Docker 容器中執行 [Whisper](https://github.com/openai/whisper) 語音轉文字伺服器。提供 OpenAI 相容的音訊轉錄 API。基於 Debian (python:3.12-slim)，簡單、私密、可自架。
+使用 [faster-whisper](https://github.com/SYSTRAN/faster-whisper) 在 Docker 容器中執行 [Whisper](https://github.com/openai/whisper) 語音轉文字伺服器。提供 OpenAI 相容的音訊轉錄和翻譯 API。基於 Debian (python:3.12-slim)，簡單、私密、可自架。
 
 **功能特性：**
 
