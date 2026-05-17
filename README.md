@@ -41,7 +41,7 @@ Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-tex
 | **Protocol** | HTTP REST | WebSocket (streaming) + HTTP REST |
 | **Latency** | Full file, then response | Near-real-time, word by word |
 | **Best for** | Meeting recordings, uploaded audio | Browser capture, RTSP streams, live captions |
-| **Image size** | ~180 MB (~3 GB for `:cuda`) | ~730 MB (~4.5 GB for `:cuda`) |
+| **Image size** | ~190 MB (~3.1 GB for `:cuda`) | ~750 MB (~4.5 GB for `:cuda`) |
 
 ## Quick start
 
