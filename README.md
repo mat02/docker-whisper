@@ -12,12 +12,12 @@ Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-tex
 
 - OpenAI-compatible `POST /v1/audio/transcriptions` and `POST /v1/audio/translations` endpoints — any app using the OpenAI Whisper API switches with a one-line change
 - Supports all Whisper models: `tiny`, `base`, `small`, `medium`, `large-v3`, `large-v3-turbo` and more
+- Speaker diarization — identify who is speaking in each segment (optional, via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx))
 - Model management via a helper script (`whisper_manage`)
 - Audio stays on your server — no data sent to third parties
 - All major audio formats supported (mp3, m4a, wav, webm, ogg, flac, and all ffmpeg formats)
 - Multiple response formats: JSON, plain text, verbose JSON, SRT subtitles, WebVTT subtitles
 - Streaming transcription — add `stream=true` to receive segments via SSE as they are decoded, with no waiting for the full file
-- Speaker diarization — identify who is speaking in each segment (optional, via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx))
 - NVIDIA GPU (CUDA) acceleration for faster inference (`:cuda` image tag)
 - Offline/air-gapped mode — run without internet access using pre-cached models (`WHISPER_LOCAL_ONLY`)
 - Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-whisper/actions/workflows/main.yml)

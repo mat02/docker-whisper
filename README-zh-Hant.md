@@ -12,12 +12,12 @@
 
 - OpenAI 相容的 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations` 端點 — 任何呼叫 OpenAI Whisper API 的應用程式只需修改一行設定即可切換
 - 支援所有 Whisper 模型：`tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 等
+- 說話人分離 — 識別每個片段中的說話人（可選，透過 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 實現）
 - 透過輔助腳本 (`whisper_manage`) 管理模型
 - 音訊資料保留在您的伺服器上，不傳送給第三方
 - 支援所有主流音訊格式（mp3、m4a、wav、webm、ogg、flac 及 ffmpeg 支援的所有格式）
 - 多種回應格式：JSON、純文字、詳細 JSON、SRT 字幕、WebVTT 字幕
 - 串流轉錄 — 加入 `stream=true` 參數，即可透過 SSE 在解碼時逐段接收轉錄結果，無需等待整個檔案處理完成
-- 說話人分離 — 識別每個片段中的說話人（可選，透過 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 實現）
 - NVIDIA GPU (CUDA) 加速推論（使用 `:cuda` 映像標籤）
 - 離線/隔離網路模式 — 使用預先快取的模型無需網際網路存取 (`WHISPER_LOCAL_ONLY`)
 - 透過 [GitHub Actions](https://github.com/hwdsl2/docker-whisper/actions/workflows/main.yml) 自動建置和發布
