@@ -35,7 +35,8 @@ Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-tex
 
 ## Community
 
-- Discussions and showcases: [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/)
+- Subscribe for project updates: [Self-Hosted Stack](https://selfhostedstack.beehiiv.com/subscribe?utm_campaign=ai)
+- Community discussions and showcases: [r/selfhostedstack](https://www.reddit.com/r/selfhostedstack/)
 
 ## When to use Whisper vs. WhisperLive
 
