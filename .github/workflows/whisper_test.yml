@@ -178,8 +178,13 @@ jobs:
 
           # Test diarization output (only when WHISPER_DIARIZATION=true)
           if [ "$TEST_ID" = "with-diarize" ]; then
-            # Verify diarization module loaded
-            docker logs "$TEST_ID" 2>&1 | grep -qi 'diariz'
+            # Verify diarization loaded successfully
+            if docker logs "$TEST_ID" 2>&1 | grep -qi 'Failed to load diarizer'; then
+              echo "Diarizer failed to load:"
+              docker logs "$TEST_ID" 2>&1 | grep -i 'Failed to load diarizer'
+              exit 1
+            fi
+            docker logs "$TEST_ID" 2>&1 | grep -q 'Diarization enabled'
 
             # Generate longer audio to ensure transcription segments are produced
             ffmpeg -y -f lavfi \
