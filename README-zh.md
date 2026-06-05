@@ -553,6 +553,27 @@ docker exec whisper whisper_manage --downloadmodel large-v3-turbo
 
 内存数据为近似值，基于 INT8 量化（默认）。模型缓存在 `/var/lib/whisper` Docker 数据卷中，仅需下载一次。
 
+## 保护你的服务器
+
+如果你的 Whisper 服务器可从公网访问 —— 即使只是短暂可达 —— 也请至少采取以下保护措施。Whisper 对 CPU/GPU 资源消耗较大，未做身份验证的接口可能被滥用，浪费你的计算资源。
+
+**1. 设置 API 密钥。** 生成一个强随机密钥并在 `env` 文件中设置 `WHISPER_API_KEY`。之后所有请求必须包含 `Authorization: Bearer <key>`。
+
+```bash
+# 生成 32 字节的随机密钥
+openssl rand -hex 32
+```
+
+**2. 在反向代理后面时绑定到 localhost。** 将 `-p 9000:9000` 替换为 `-p 127.0.0.1:9000:9000`（或在 `docker-compose.yml` 中将 `"9000:9000/tcp"` 改为 `"127.0.0.1:9000:9000/tcp"`），使未加密端口无法从主机外部直接访问。
+
+**3. 在代理处限制上传大小。** 音频文件可能很大；配置反向代理以拒绝超大上传（例如 nginx `client_max_body_size 100M;`），从而限制单个请求占用的磁盘和内存。
+
+**4. 注意日志级别。** `WHISPER_LOG_LEVEL=DEBUG` 可能会将转录文本写入日志。在共享系统上请保持 `INFO` 或更高级别。
+
+**5. 浏览器调用时在代理处启用 CORS。** 本服务器默认不设置 `Access-Control-Allow-Origin` 响应头；若需在不同源的网页中直接调用本 API，请在反向代理处添加 CORS 头。
+
+**6. 考虑限流。** 在服务器前部署限流（如 nginx `limit_req_zone`、Caddy `rate_limit`），限制每个客户端 IP 的并发转录请求数。
+
 ## 使用反向代理
 
 如需面向公网部署，可在 Whisper 前置反向代理处理 HTTPS 终止。在本地或可信网络中使用无需 HTTPS，但将 API 端点暴露在公网时建议启用 HTTPS。

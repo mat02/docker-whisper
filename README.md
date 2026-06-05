@@ -553,6 +553,27 @@ To change the active model:
 
 RAM figures are approximate and reflect INT8 quantization (default). Models are cached in the `/var/lib/whisper` Docker volume and only downloaded once.
 
+## Securing your server
+
+If your Whisper server is reachable from the public internet — even briefly — apply at minimum these protections. Whisper is CPU/GPU-intensive, so an unauthenticated endpoint can be abused to burn your compute resources.
+
+**1. Set an API key.** Generate a strong random key and set `WHISPER_API_KEY` in your `env` file. All requests must then include `Authorization: Bearer <key>`.
+
+```bash
+# Generate a 32-byte random key
+openssl rand -hex 32
+```
+
+**2. Bind to localhost when fronted by a reverse proxy.** Replace `-p 9000:9000` with `-p 127.0.0.1:9000:9000` (or change `"9000:9000/tcp"` to `"127.0.0.1:9000:9000/tcp"` in `docker-compose.yml`) so the unencrypted port is not reachable directly from outside the host.
+
+**3. Limit upload size at the proxy.** Audio files can be large; configure your reverse proxy to reject oversized uploads (e.g. nginx `client_max_body_size 100M;`). This bounds the disk and memory footprint of a single request.
+
+**4. Mind the log level.** `WHISPER_LOG_LEVEL=DEBUG` may write transcript text to logs. Keep it at `INFO` or higher on shared systems.
+
+**5. Enable CORS at the proxy if calling from a browser.** The server does not set `Access-Control-Allow-Origin` headers by default; add them at your reverse proxy if you intend to call the API directly from a web page on a different origin.
+
+**6. Consider rate limiting.** Place a rate-limit (e.g. nginx `limit_req_zone`, Caddy `rate_limit`) in front of the server to cap concurrent transcriptions per client IP.
+
 ## Using a reverse proxy
 
 For internet-facing deployments, place a reverse proxy in front of Whisper to handle HTTPS termination. The server works without HTTPS on a local or trusted network, but HTTPS is recommended when the API endpoint is exposed to the internet.
