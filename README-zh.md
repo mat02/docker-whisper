@@ -178,8 +178,7 @@ docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 | `WHISPER_WORD_TIMESTAMPS` | 设为 `true` 时，全局启用词级时间戳。`verbose_json` 输出将包含顶层 `words` 数组，含每个词的起止时间和置信度。也可通过 `timestamp_granularities[]=word` 按请求启用。 | *（未设置）* |
 | `WHISPER_DIARIZATION` | 设为 `true` 启用说话人分离，识别每个片段中的说话人。使用 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 和 pyannote segmentation-3.0 ONNX 模型（约 45 MB，首次使用时自动下载）。不支持流式模式。 | *（未设置）* |
 | `WHISPER_DIARIZE_NUM_SPEAKERS` | 说话人确切数量（如已知）。提高聚类准确性。设为 `-1` 或留空表示自动检测。 | `-1` |
-| `WHISPER_DIARIZE_MAX_SPEAKERS` | 最大检测说话人数。仅在 `NUM_SPEAKERS` 未设置时使用。 | `-1` |
-| `WHISPER_DIARIZE_THRESHOLD` | 聚类阈值。值越小检测到的说话人越多，值越大检测到的越少。 | `0.5` |
+| `WHISPER_DIARIZE_THRESHOLD` | 自动检测时使用的聚类阈值。值越小检测到的说话人越多，值越大检测到的越少。设置确切说话人数量时会忽略此项。 | `0.5` |
 
 **注：** 在 `env` 文件中，值可用单引号括起，例如 `VAR='value'`。`=` 两侧不要有空格。如更改 `WHISPER_PORT`，请相应更新 `docker run` 命令中的 `-p` 参数。
 

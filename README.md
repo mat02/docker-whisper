@@ -178,8 +178,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `WHISPER_WORD_TIMESTAMPS` | When set to `true`, enables word-level timestamps globally for all requests. The `verbose_json` output will include a top-level `words` array with per-word timing and confidence. Can also be enabled per-request via `timestamp_granularities[]=word`. | *(not set)* |
 | `WHISPER_DIARIZATION` | Set to `true` to enable speaker diarization. Identifies who is speaking in each segment. Uses [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) with pyannote segmentation-3.0 ONNX models (~45 MB, auto-downloaded on first use). Not supported in streaming mode. | *(not set)* |
 | `WHISPER_DIARIZE_NUM_SPEAKERS` | Exact number of speakers (if known). Improves clustering accuracy. Set to `-1` or leave unset for auto-detection. | `-1` |
-| `WHISPER_DIARIZE_MAX_SPEAKERS` | Maximum number of speakers to detect. Only used when `NUM_SPEAKERS` is unset. | `-1` |
-| `WHISPER_DIARIZE_THRESHOLD` | Clustering threshold. Lower = more speakers detected, higher = fewer. | `0.5` |
+| `WHISPER_DIARIZE_THRESHOLD` | Clustering threshold for auto-detection. Lower = more speakers detected, higher = fewer. Ignored when exact speaker count is set. | `0.5` |
 
 **Note:** In your `env` file, you may enclose values in single quotes, e.g. `VAR='value'`. Do not add spaces around `=`. If you change `WHISPER_PORT`, update the `-p` flag in the `docker run` command accordingly.
 
