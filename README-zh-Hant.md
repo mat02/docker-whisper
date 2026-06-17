@@ -174,6 +174,7 @@ docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 | `WHISPER_API_KEY` | 選用的 Bearer 金鑰。設定後所有請求須包含 `Authorization: Bearer <key>`。 | *（未設定）* |
 | `WHISPER_LOG_LEVEL` | 日誌等級：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
 | `WHISPER_BEAM` | 轉錄解碼的 beam 大小。較大的值可能以速度換取精確度。使用 `1` 可獲得最快的貪婪解碼。 | `5` |
+| `WHISPER_MAX_UPLOAD_MB` | 上傳音訊檔案的最大大小（MB）。超過此限制的請求會返回 HTTP 413。設為 `0` 可停用此限制。 | `1024` |
 | `WHISPER_LOCAL_ONLY` | 設為任意非空值（如 `true`）時，停用所有 HuggingFace 模型下載。適用於預先快取模型的離線或隔離網路部署。 | *（未設定）* |
 | `WHISPER_WORD_TIMESTAMPS` | 設為 `true` 時，全域啟用詞級時間戳。`verbose_json` 輸出將包含頂層 `words` 陣列，含每個詞的起止時間和置信度。也可透過 `timestamp_granularities[]=word` 按請求啟用。 | *（未設定）* |
 | `WHISPER_DIARIZATION` | 設為 `true` 啟用說話人分離，識別每個片段中的說話人。使用 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 和 pyannote segmentation-3.0 ONNX 模型（約 45 MB，首次使用時自動下載）。不支援串流模式。 | *（未設定）* |
@@ -566,7 +567,7 @@ openssl rand -hex 32
 
 **2. 在反向代理後方時繫結到 localhost。** 將 `-p 9000:9000` 替換為 `-p 127.0.0.1:9000:9000`（或在 `docker-compose.yml` 中將 `"9000:9000/tcp"` 改為 `"127.0.0.1:9000:9000/tcp"`），使未加密連接埠無法從主機外部直接存取。
 
-**3. 在代理處限制上傳大小。** 音訊檔案可能很大；設定反向代理以拒絕過大的上傳（例如 nginx `client_max_body_size 100M;`），從而限制單一請求佔用的磁碟和記憶體。
+**3. 限制上傳大小。** 伺服器會拒絕超過 `WHISPER_MAX_UPLOAD_MB`（預設 `1024`）的上傳。對於面向網際網路的部署，還應設定反向代理在請求到達應用程式前拒絕過大的上傳（例如 nginx `client_max_body_size 100M;`）。
 
 **4. 注意日誌等級。** `WHISPER_LOG_LEVEL=DEBUG` 可能會將轉錄文字寫入日誌。在共用系統上請保持 `INFO` 或更高等級。
 

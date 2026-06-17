@@ -174,6 +174,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `WHISPER_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
 | `WHISPER_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
 | `WHISPER_BEAM` | Beam size for transcription decoding. Higher values may improve accuracy at the cost of speed. Use `1` for fastest (greedy) decoding. | `5` |
+| `WHISPER_MAX_UPLOAD_MB` | Maximum uploaded audio file size in MB. Requests above this limit return HTTP 413. Set to `0` to disable the limit. | `1024` |
 | `WHISPER_LOCAL_ONLY` | When set to any non-empty value (e.g. `true`), disables all HuggingFace model downloads. For offline or air-gapped deployments with pre-cached models. | *(not set)* |
 | `WHISPER_WORD_TIMESTAMPS` | When set to `true`, enables word-level timestamps globally for all requests. The `verbose_json` output will include a top-level `words` array with per-word timing and confidence. Can also be enabled per-request via `timestamp_granularities[]=word`. | *(not set)* |
 | `WHISPER_DIARIZATION` | Set to `true` to enable speaker diarization. Identifies who is speaking in each segment. Uses [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) with pyannote segmentation-3.0 ONNX models (~45 MB, auto-downloaded on first use). Not supported in streaming mode. | *(not set)* |
@@ -566,7 +567,7 @@ openssl rand -hex 32
 
 **2. Bind to localhost when fronted by a reverse proxy.** Replace `-p 9000:9000` with `-p 127.0.0.1:9000:9000` (or change `"9000:9000/tcp"` to `"127.0.0.1:9000:9000/tcp"` in `docker-compose.yml`) so the unencrypted port is not reachable directly from outside the host.
 
-**3. Limit upload size at the proxy.** Audio files can be large; configure your reverse proxy to reject oversized uploads (e.g. nginx `client_max_body_size 100M;`). This bounds the disk and memory footprint of a single request.
+**3. Limit upload size.** The server rejects uploads above `WHISPER_MAX_UPLOAD_MB` (default `1024`). For internet-facing deployments, also configure your reverse proxy to reject oversized uploads (e.g. nginx `client_max_body_size 100M;`) before they reach the app.
 
 **4. Mind the log level.** `WHISPER_LOG_LEVEL=DEBUG` may write transcript text to logs. Keep it at `INFO` or higher on shared systems.
 
