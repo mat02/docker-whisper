@@ -60,6 +60,8 @@ WHISPER_LOG_LEVEL=$(nospaces "$WHISPER_LOG_LEVEL")
 WHISPER_LOG_LEVEL=$(noquotes "$WHISPER_LOG_LEVEL")
 WHISPER_BEAM=$(nospaces "$WHISPER_BEAM")
 WHISPER_BEAM=$(noquotes "$WHISPER_BEAM")
+WHISPER_MAX_UPLOAD_MB=$(nospaces "$WHISPER_MAX_UPLOAD_MB")
+WHISPER_MAX_UPLOAD_MB=$(noquotes "$WHISPER_MAX_UPLOAD_MB")
 WHISPER_LOCAL_ONLY=$(nospaces "$WHISPER_LOCAL_ONLY")
 WHISPER_LOCAL_ONLY=$(noquotes "$WHISPER_LOCAL_ONLY")
 WHISPER_WORD_TIMESTAMPS=$(nospaces "$WHISPER_WORD_TIMESTAMPS")
@@ -84,6 +86,7 @@ _USER_COMPUTE_TYPE="$WHISPER_COMPUTE_TYPE"
 [ -z "$WHISPER_THREADS" ]      && WHISPER_THREADS=2
 [ -z "$WHISPER_LOG_LEVEL" ]    && WHISPER_LOG_LEVEL=INFO
 [ -z "$WHISPER_BEAM" ]         && WHISPER_BEAM=5
+[ -z "$WHISPER_MAX_UPLOAD_MB" ] && WHISPER_MAX_UPLOAD_MB=1024
 [ -z "$WHISPER_DIARIZE_NUM_SPEAKERS" ] && WHISPER_DIARIZE_NUM_SPEAKERS=-1
 [ -z "$WHISPER_DIARIZE_THRESHOLD" ]    && WHISPER_DIARIZE_THRESHOLD=0.5
 
@@ -140,6 +143,11 @@ if ! printf '%s' "$WHISPER_BEAM" | grep -Eq '^[1-9][0-9]*$'; then
   exiterr "WHISPER_BEAM must be a positive integer (e.g. 1, 5)."
 fi
 
+# Validate maximum upload size in MB (0 disables the limit)
+if ! printf '%s' "$WHISPER_MAX_UPLOAD_MB" | grep -Eq '^(0|[1-9][0-9]*)$'; then
+  exiterr "WHISPER_MAX_UPLOAD_MB must be 0 (unlimited) or a positive integer."
+fi
+
 # Validate diarization speaker counts (-1 for auto-detect, or a positive integer)
 if ! printf '%s' "$WHISPER_DIARIZE_NUM_SPEAKERS" | grep -Eq '^(-1|[1-9][0-9]*)$'; then
   exiterr "WHISPER_DIARIZE_NUM_SPEAKERS must be -1 (auto) or a positive integer."
@@ -175,6 +183,7 @@ export WHISPER_THREADS
 export WHISPER_API_KEY
 export WHISPER_LOG_LEVEL
 export WHISPER_BEAM
+export WHISPER_MAX_UPLOAD_MB
 export WHISPER_LOCAL_ONLY
 export WHISPER_WORD_TIMESTAMPS
 export WHISPER_DIARIZATION
