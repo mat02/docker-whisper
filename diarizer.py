@@ -77,7 +77,6 @@ def _ensure_models(cache_dir: str) -> tuple:
 def load(
     cache_dir: str = "/var/lib/whisper",
     num_speakers: int = -1,
-    max_speakers: int = -1,
     cluster_threshold: float = 0.5,
 ) -> None:
     """Download ONNX models if needed, initialize the diarization pipeline."""
@@ -85,9 +84,7 @@ def load(
 
     seg_path, emb_path = _ensure_models(cache_dir)
 
-    # If max_speakers is set but num_speakers is not, use -1 for num_clusters
-    # (sherpa-onnx will auto-detect up to the clustering threshold).
-    # num_speakers takes precedence if both are set.
+    # If the speaker count is unknown, use threshold-based auto clustering.
     num_clusters = num_speakers if num_speakers > 0 else -1
 
     config = sherpa_onnx.OfflineSpeakerDiarizationConfig(

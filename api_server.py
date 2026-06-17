@@ -98,13 +98,11 @@ def _load_diarizer() -> None:
         import diarizer
         cache_dir = os.environ.get("HF_HOME", "/var/lib/whisper")
         num_speakers = _env_int("WHISPER_DIARIZE_NUM_SPEAKERS", -1)
-        max_speakers = _env_int("WHISPER_DIARIZE_MAX_SPEAKERS", -1)
         threshold = _env_float("WHISPER_DIARIZE_THRESHOLD", 0.5)
         logger.info("Loading diarization pipeline...")
         diarizer.load(
             cache_dir=cache_dir,
             num_speakers=num_speakers,
-            max_speakers=max_speakers,
             cluster_threshold=threshold,
         )
         _diarization_enabled = True
