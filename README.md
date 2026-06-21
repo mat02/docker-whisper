@@ -84,7 +84,7 @@ docker run \
 
 **Important:** This image requires at least 700 MB of available RAM for the default `base` model. Systems with 512 MB or less of RAM are not supported.
 
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 9000:9000` with `-p 127.0.0.1:9000:9000` in the `docker run` command above, to prevent direct access to the unencrypted port. Set `WHISPER_API_KEY` in your `env` file when the server is accessible from the public internet.
+**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also replace `-p 9000:9000` with `-p 127.0.0.1:9000:9000` in the `docker run` command above, to prevent direct access to the unencrypted port.
 
 The Whisper `base` model (~145 MB) is downloaded and cached on first start. Check the logs to confirm the server is ready:
 
@@ -159,7 +159,7 @@ Supported platforms: `linux/amd64` and `linux/arm64`. The `:cuda` tag supports `
 
 ## Environment variables
 
-All variables are optional. Set `WHISPER_API_KEY` to enable Bearer token authentication.
+All variables are optional. Fresh installs with a mounted `/var/lib/whisper` volume auto-generate a Bearer token. Existing installs without a key remain open for backward compatibility.
 
 This Docker image uses the following variables, that can be declared in an `env` file (see [example](whisper.env.example)):
 
@@ -171,7 +171,7 @@ This Docker image uses the following variables, that can be declared in an `env`
 | `WHISPER_DEVICE` | Compute device: `cpu`, `cuda`, or `auto`. Use `cuda` with the `:cuda` image for GPU acceleration. `auto` detects GPU and falls back to CPU. | `cpu` |
 | `WHISPER_COMPUTE_TYPE` | Quantization / compute type. `int8` is recommended for CPU; `float16` is recommended for CUDA. | `int8` (CPU) / `float16` (CUDA) |
 | `WHISPER_THREADS` | CPU threads for inference. Set to the number of physical cores for best latency. | `2` |
-| `WHISPER_API_KEY` | Optional Bearer token. If set, all API requests must include `Authorization: Bearer <key>`. | *(not set)* |
+| `WHISPER_API_KEY` | Optional Bearer token. Fresh persistent installs auto-generate one. If set, all API requests must include `Authorization: Bearer <key>`. Set explicitly empty to disable authentication. | Auto-generated for fresh persistent installs |
 | `WHISPER_LOG_LEVEL` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`. | `INFO` |
 | `WHISPER_BEAM` | Beam size for transcription decoding. Higher values may improve accuracy at the cost of speed. Use `1` for fastest (greedy) decoding. | `5` |
 | `WHISPER_MAX_UPLOAD_MB` | Maximum uploaded audio file size in MB. Requests above this limit return HTTP 413. Set to `0` to disable the limit. | `1024` |
@@ -242,7 +242,7 @@ volumes:
     name: whisper-data
 ```
 
-**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"9000:9000/tcp"` to `"127.0.0.1:9000:9000/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port. Set `WHISPER_API_KEY` in your `env` file when the server is accessible from the public internet.
+**Note:** For internet-facing deployments, using a [reverse proxy](#using-a-reverse-proxy) to add HTTPS is **strongly recommended**. In that case, also change `"9000:9000/tcp"` to `"127.0.0.1:9000:9000/tcp"` in `docker-compose.yml`, to prevent direct access to the unencrypted port.
 
 <details>
 <summary><strong>Using docker-compose with GPU (NVIDIA CUDA)</strong></summary>
@@ -558,7 +558,7 @@ RAM figures are approximate and reflect INT8 quantization (default). Models are 
 
 If your Whisper server is reachable from the public internet — even briefly — apply at minimum these protections. Whisper is CPU/GPU-intensive, so an unauthenticated endpoint can be abused to burn your compute resources.
 
-**1. Set an API key.** Generate a strong random key and set `WHISPER_API_KEY` in your `env` file. All requests must then include `Authorization: Bearer <key>`.
+**1. Use an API key.** Fresh installs with a mounted `/var/lib/whisper` volume auto-generate an API key. Display it with `docker exec whisper whisper_manage --showkey`, or use `docker exec whisper whisper_manage --getkey` in scripts. Existing installs without a key remain open for backward compatibility; set `WHISPER_API_KEY` in your `env` file to enable authentication manually. All authenticated requests must include `Authorization: Bearer <key>`.
 
 ```bash
 # Generate a 32-byte random key
@@ -617,8 +617,6 @@ server {
     }
 }
 ```
-
-Set `WHISPER_API_KEY` in your `env` file when the server is accessible from the public internet.
 
 ## Update Docker image
 

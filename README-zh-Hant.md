@@ -84,7 +84,7 @@ docker run \
 
 **重要：** 此映像執行預設 `base` 模型需要至少 700 MB 可用記憶體。記憶體為 512 MB 或更少的系統不受支援。
 
-**注：** 如需面向網際網路的部署，**強烈建議**使用[反向代理](#使用反向代理)來新增 HTTPS。此時，還應將上述 `docker run` 命令中的 `-p 9000:9000` 替換為 `-p 127.0.0.1:9000:9000`，以防止從外部直接存取未加密連接埠。當伺服器可從公用網際網路存取時，請在 `env` 檔案中設定 `WHISPER_API_KEY`。
+**注：** 如需面向網際網路的部署，**強烈建議**使用[反向代理](#使用反向代理)來新增 HTTPS。此時，還應將上述 `docker run` 命令中的 `-p 9000:9000` 替換為 `-p 127.0.0.1:9000:9000`，以防止從外部直接存取未加密連接埠。
 
 首次啟動時，Whisper `base` 模型（約 145 MB）將自動下載並快取。查看日誌確認伺服器已就緒：
 
@@ -159,7 +159,7 @@ docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 
 ## 環境變數
 
-所有變數均為選用。設定 `WHISPER_API_KEY` 可啟用 Bearer Token 驗證。
+所有變數均為選用。掛載 `/var/lib/whisper` 資料卷的新安裝會自動產生 Bearer 令牌。沒有金鑰的既有安裝會保持開放以相容舊行為。
 
 此 Docker 映像檔使用以下變數，可在 `env` 檔案中宣告（參見[範例](whisper.env.example)）：
 
@@ -171,7 +171,7 @@ docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 | `WHISPER_DEVICE` | 運算裝置：`cpu`、`cuda` 或 `auto`。使用 `:cuda` 映像時設為 `cuda` 以啟用 GPU 加速。`auto` 自動偵測 GPU，無 GPU 時回退到 CPU。 | `cpu` |
 | `WHISPER_COMPUTE_TYPE` | 量化 / 計算類型。CPU 建議 `int8`；CUDA 建議 `float16`。 | `int8`（CPU）/ `float16`（CUDA） |
 | `WHISPER_THREADS` | 推論使用的 CPU 執行緒數。設為實體核心數可獲得最佳延遲。 | `2` |
-| `WHISPER_API_KEY` | 選用的 Bearer 金鑰。設定後所有請求須包含 `Authorization: Bearer <key>`。 | *（未設定）* |
+| `WHISPER_API_KEY` | 選用的 Bearer 令牌。新持久化安裝會自動產生。設定後所有請求須包含 `Authorization: Bearer <key>`。明確設定為空可停用驗證。 | 新持久化安裝自動產生 |
 | `WHISPER_LOG_LEVEL` | 日誌等級：`DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL`。 | `INFO` |
 | `WHISPER_BEAM` | 轉錄解碼的 beam 大小。較大的值可能以速度換取精確度。使用 `1` 可獲得最快的貪婪解碼。 | `5` |
 | `WHISPER_MAX_UPLOAD_MB` | 上傳音訊檔案的最大大小（MB）。超過此限制的請求會返回 HTTP 413。設為 `0` 可停用此限制。 | `1024` |
@@ -242,7 +242,7 @@ volumes:
     name: whisper-data
 ```
 
-**注：** 如需面向公網部署，強烈建議使用[反向代理](#使用反向代理)啟用 HTTPS。此時請將 `docker-compose.yml` 中的 `"9000:9000/tcp"` 改為 `"127.0.0.1:9000:9000/tcp"`，以防止未加密連接埠被直接存取。當伺服器可從公用網際網路存取時，請在 `env` 檔案中設定 `WHISPER_API_KEY`。
+**注：** 如需面向公網部署，強烈建議使用[反向代理](#使用反向代理)啟用 HTTPS。此時請將 `docker-compose.yml` 中的 `"9000:9000/tcp"` 改為 `"127.0.0.1:9000:9000/tcp"`，以防止未加密連接埠被直接存取。
 
 <details>
 <summary><strong>使用 docker-compose 部署 GPU（NVIDIA CUDA）</strong></summary>
@@ -558,7 +558,7 @@ docker exec whisper whisper_manage --downloadmodel large-v3-turbo
 
 如果你的 Whisper 伺服器可從公用網際網路存取 —— 即使只是短暫可達 —— 也請至少採取以下保護措施。Whisper 對 CPU/GPU 資源消耗較大，未做身分驗證的介面可能被濫用，浪費你的運算資源。
 
-**1. 設定 API 金鑰。** 產生一個強隨機金鑰並在 `env` 檔案中設定 `WHISPER_API_KEY`。之後所有請求必須包含 `Authorization: Bearer <key>`。
+**1. 使用 API 金鑰。** 掛載 `/var/lib/whisper` 資料卷的新安裝會自動產生 API 金鑰。可用 `docker exec whisper whisper_manage --showkey` 查看；腳本中可用 `docker exec whisper whisper_manage --getkey`。沒有金鑰的既有安裝會保持開放以相容舊行為；也可以在 `env` 檔案中設定 `WHISPER_API_KEY` 手動啟用驗證。所有已驗證請求必須包含 `Authorization: Bearer <key>`。
 
 ```bash
 # 產生 32 位元組的隨機金鑰
@@ -617,8 +617,6 @@ server {
     }
 }
 ```
-
-如伺服器對公網開放，請在 `env` 檔案中設定 `WHISPER_API_KEY`。
 
 ## 更新 Docker 映像檔
 
