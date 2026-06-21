@@ -13,6 +13,8 @@ WHISPER_DATA="/var/lib/whisper"
 PORT_FILE="${WHISPER_DATA}/.port"
 MODEL_FILE="${WHISPER_DATA}/.model"
 SERVER_ADDR_FILE="${WHISPER_DATA}/.server_addr"
+API_KEY_FILE="${WHISPER_DATA}/.api_key"
+AUTH_ENABLED_FILE="${WHISPER_DATA}/.auth_enabled"
 
 exiterr() { echo "Error: $1" >&2; exit 1; }
 
@@ -30,6 +32,8 @@ Usage: docker exec <container> whisper_manage [options]
 
 Options:
   --showinfo                           show server info (model, endpoint, API docs)
+  --showkey                            show the API key, if configured
+  --getkey                             output the API key (machine-readable, no decoration)
   --listmodels                         list available Whisper model names and sizes
   --downloadmodel <model>              pre-download a model to the cache volume
   --downloaddiarize                    pre-download diarization ONNX models
@@ -46,6 +50,8 @@ delay on the next container start.
 
 Examples:
   docker exec whisper whisper_manage --showinfo
+  docker exec whisper whisper_manage --showkey
+  docker exec whisper whisper_manage --getkey
   docker exec whisper whisper_manage --listmodels
   docker exec whisper whisper_manage --downloadmodel large-v3
   docker exec whisper whisper_manage --downloadmodel large-v3-turbo
@@ -85,6 +91,22 @@ load_config() {
   else
     SERVER_ADDR="<server ip>"
   fi
+
+  if [ -f "$AUTH_ENABLED_FILE" ]; then
+    WHISPER_AUTH_ENABLED=$(cat "$AUTH_ENABLED_FILE")
+  fi
+
+  if [ "$WHISPER_AUTH_ENABLED" != 0 ] && [ -z "$WHISPER_API_KEY" ] && [ -f "$API_KEY_FILE" ]; then
+    WHISPER_API_KEY=$(cat "$API_KEY_FILE")
+  fi
+
+  if [ -z "$WHISPER_AUTH_ENABLED" ]; then
+    if [ -n "$WHISPER_API_KEY" ]; then
+      WHISPER_AUTH_ENABLED=1
+    else
+      WHISPER_AUTH_ENABLED=0
+    fi
+  fi
 }
 
 check_server() {
@@ -95,6 +117,8 @@ check_server() {
 
 parse_args() {
   show_info=0
+  show_key=0
+  get_key=0
   list_models=0
   download_model=0
   download_diarize=0
@@ -104,6 +128,14 @@ parse_args() {
     case "$1" in
       --showinfo)
         show_info=1
+        shift
+        ;;
+      --showkey)
+        show_key=1
+        shift
+        ;;
+      --getkey)
+        get_key=1
         shift
         ;;
       --listmodels)
@@ -132,7 +164,7 @@ parse_args() {
 
 check_args() {
   local action_count
-  action_count=$((show_info + list_models + download_model + download_diarize))
+  action_count=$((show_info + show_key + get_key + list_models + download_model + download_diarize))
 
   if [ "$action_count" -eq 0 ]; then
     show_usage
@@ -144,6 +176,46 @@ check_args() {
   if [ "$download_model" = 1 ] && [ -z "$model_to_download" ]; then
     exiterr "Missing model name. Usage: --downloadmodel <model>"
   fi
+}
+
+do_show_key() {
+  if [ "$WHISPER_AUTH_ENABLED" != 1 ]; then
+    exiterr "API key authentication is disabled for this container."
+  fi
+
+  if [ -z "$WHISPER_API_KEY" ]; then
+    if [ -f "$API_KEY_FILE" ]; then
+      WHISPER_API_KEY=$(cat "$API_KEY_FILE")
+    else
+      exiterr "API key not found. Authentication may be disabled for this container."
+    fi
+  fi
+
+  echo
+  echo "==========================================================="
+  echo " Whisper API key"
+  echo "==========================================================="
+  echo "${WHISPER_API_KEY}"
+  echo "==========================================================="
+  echo
+  echo "Use with: -H \"Authorization: Bearer ${WHISPER_API_KEY}\""
+  echo
+}
+
+do_get_key() {
+  if [ "$WHISPER_AUTH_ENABLED" != 1 ]; then
+    exit 1
+  fi
+
+  if [ -z "$WHISPER_API_KEY" ]; then
+    if [ -f "$API_KEY_FILE" ]; then
+      WHISPER_API_KEY=$(cat "$API_KEY_FILE")
+    else
+      exit 1
+    fi
+  fi
+
+  printf '%s' "$WHISPER_API_KEY"
 }
 
 do_show_info() {
@@ -163,7 +235,14 @@ do_show_info() {
   echo
   echo "Example transcription:"
   echo "  curl http://${SERVER_ADDR}:${WHISPER_PORT}/v1/audio/transcriptions \\"
+  if [ "$WHISPER_AUTH_ENABLED" = 1 ]; then
+    echo "    -H \"Authorization: Bearer <api-key>\" \\"
+  fi
   echo "    -F file=@audio.mp3 -F model=whisper-1"
+  if [ "$WHISPER_AUTH_ENABLED" = 1 ]; then
+    echo
+    echo "Use '--showkey' to display the API key."
+  fi
   echo
   echo "To change the active model:"
   echo "  1. Pre-download: docker exec <container> whisper_manage --downloadmodel <name>"
@@ -303,6 +382,16 @@ check_args
 if [ "$show_info" = 1 ]; then
   check_server
   do_show_info
+  exit 0
+fi
+
+if [ "$show_key" = 1 ]; then
+  do_show_key
+  exit 0
+fi
+
+if [ "$get_key" = 1 ]; then
+  do_get_key
   exit 0
 fi
 
