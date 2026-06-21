@@ -12,7 +12,7 @@
 
 - OpenAI 兼容的 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations` 接口 — 任何调用 OpenAI Whisper API 的应用只需修改一行配置即可切换
 - 支持所有 Whisper 模型：`tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 等
-- 说话人分离 — 识别每个片段中的说话人（可选，通过 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 实现）
+- 说话人分离 — 识别每个片段中的说话人（可选的本地扩展，通过 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 实现）
 - 通过辅助脚本 (`whisper_manage`) 管理模型
 - 音频数据留在您的服务器上，不发送给第三方
 - 支持所有主流音频格式（mp3、m4a、wav、webm、ogg、flac 及 ffmpeg 支持的所有格式）
@@ -286,7 +286,9 @@ volumes:
 
 ## API 参考
 
-该 API 与 OpenAI 的[音频转录接口](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)和[音频翻译接口](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)完全兼容。任何已调用 `https://api.openai.com/v1/audio/transcriptions` 的应用，只需设置以下环境变量即可切换到自托管服务：
+该 API 与 OpenAI 的[音频转录接口](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)和[音频翻译接口](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)兼容。任何已调用 `https://api.openai.com/v1/audio/transcriptions` 的应用，只需设置以下环境变量即可切换到自托管服务：
+
+说话人分离启用时是本地 sherpa-onnx 扩展，并不等同于 OpenAI 的说话人分离模型。
 
 ```
 OPENAI_BASE_URL=http://您的服务器IP:9000
@@ -659,7 +661,7 @@ Whisper (STT)、Embeddings、LiteLLM、Kokoro (TTS)、Ollama (LLM)、Docling 和
 
 ## 说话人分离
 
-说话人分离功能识别每个转录片段中*谁在说话*。基于 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 使用导出为 ONNX 格式的 pyannote segmentation-3.0 模型。
+说话人分离功能识别每个转录片段中*谁在说话*。这是一个本地扩展，基于 [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 使用导出为 ONNX 格式的 pyannote segmentation-3.0 模型。
 
 **启用说话人分离：**
 

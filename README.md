@@ -12,7 +12,7 @@ Docker image to run a [Whisper](https://github.com/openai/whisper) speech-to-tex
 
 - OpenAI-compatible `POST /v1/audio/transcriptions` and `POST /v1/audio/translations` endpoints — any app using the OpenAI Whisper API switches with a one-line change
 - Supports all Whisper models: `tiny`, `base`, `small`, `medium`, `large-v3`, `large-v3-turbo` and more
-- Speaker diarization — identify who is speaking in each segment (optional, via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx))
+- Speaker diarization — identify who is speaking in each segment (optional local extension via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx))
 - Model management via a helper script (`whisper_manage`)
 - Audio stays on your server — no data sent to third parties
 - All major audio formats supported (mp3, m4a, wav, webm, ogg, flac, and all ffmpeg formats)
@@ -286,7 +286,9 @@ volumes:
 
 ## API reference
 
-The API is fully compatible with OpenAI's [audio transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create) and [audio translation](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create) endpoints. Any application already calling `https://api.openai.com/v1/audio/transcriptions` can switch to self-hosted by setting:
+The API is compatible with OpenAI's [audio transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create) and [audio translation](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create) endpoints. Any application already calling `https://api.openai.com/v1/audio/transcriptions` can switch to self-hosted by setting:
+
+Speaker diarization, when enabled, is a local sherpa-onnx extension and is not equivalent to OpenAI diarization models.
 
 ```
 OPENAI_BASE_URL=http://your_server_ip:9000
@@ -659,7 +661,7 @@ The Whisper (STT), Embeddings, LiteLLM, Kokoro (TTS), Ollama (LLM), Docling, and
 
 ## Speaker diarization
 
-Speaker diarization identifies *who* is speaking in each transcribed segment. It is powered by [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) using the pyannote segmentation-3.0 model exported to ONNX format.
+Speaker diarization identifies *who* is speaking in each transcribed segment. It is a local extension powered by [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) using the pyannote segmentation-3.0 model exported to ONNX format.
 
 **Enable diarization:**
 
