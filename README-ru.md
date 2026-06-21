@@ -288,7 +288,7 @@ volumes:
 
 API совместим с [эндпоинтом транскрибирования](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create) и [эндпоинтом перевода](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create) OpenAI. Любое приложение, использующее `https://api.openai.com/v1/audio/transcriptions`, может переключиться на собственный хостинг, установив:
 
-Диаризация говорящих, если включена, является локальным расширением на базе sherpa-onnx и не эквивалентна моделям диаризации OpenAI.
+Диаризация говорящих, если включена, является локальным расширением на базе sherpa-onnx и не эквивалентна моделям диаризации OpenAI. Параметры транскрибирования, специфичные для OpenAI, такие как `gpt-4o-transcribe-diarize`, `response_format=diarized_json`, `include=logprobs`, `chunking_strategy`, `known_speaker_names` и `known_speaker_references`, не поддерживаются и возвращают `400`.
 
 ```
 OPENAI_BASE_URL=http://IP_вашего_сервера:9000
@@ -309,7 +309,7 @@ Content-Type: multipart/form-data
 | `model` | строка | ✅ | Передайте `whisper-1` (значение принимается, но всегда используется активная модель). |
 | `language` | строка | — | Код языка BCP-47. Переопределяет `WHISPER_LANGUAGE` для данного запроса. |
 | `prompt` | строка | — | Необязательный текст для управления стилем модели или продолжения предыдущего сегмента. |
-| `response_format` | строка | — | Формат вывода. По умолчанию: `json`. См. [форматы ответа](#форматы-ответа). Игнорируется при `stream=true`. |
+| `response_format` | строка | — | Формат вывода. По умолчанию: `json`. См. [форматы ответа](#форматы-ответа). Игнорируется при `stream=true`. Специфичный для OpenAI `diarized_json` не поддерживается. |
 | `temperature` | число с плавающей точкой | — | Температура сэмплирования (0–1). По умолчанию: `0`. |
 | `stream` | логическое | — | Включить потоковую передачу SSE. При значении `true` сегменты возвращаются как события `text/event-stream` по мере декодирования. По умолчанию: `false`. |
 | `timestamp_granularities[]` | массив | — | Гранулярность меток времени. Значения: `word`, `segment`. При наличии `word` вывод `verbose_json` содержит массив `words` на верхнем уровне. По умолчанию: `["segment"]`. |
@@ -448,7 +448,7 @@ POST /v1/audio/translations
 Content-Type: multipart/form-data
 ```
 
-Перевод аудио с любого языка на английский текст. Совместим с [эндпоинтом перевода OpenAI](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create). Принимает те же параметры, что и эндпоинт транскрибирования. Вывод всегда на английском.
+Перевод аудио с любого языка на английский текст. Совместим с [эндпоинтом перевода OpenAI](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create). Принимает обычные параметры перевода. Вывод всегда на английском.
 
 > **Примечание:** Модели только для английского (`.en`) не поддерживают перевод. Используйте многоязычную модель (например, `base`, `small`, `large-v3-turbo`).
 

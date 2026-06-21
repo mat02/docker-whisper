@@ -288,7 +288,7 @@ volumes:
 
 此 API 與 OpenAI 的[音訊轉錄端點](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)和[音訊翻譯端點](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)相容。任何已呼叫 `https://api.openai.com/v1/audio/transcriptions` 的應用程式，只需設定以下環境變數即可切換至自架服務：
 
-說話人分離啟用時是本地 sherpa-onnx 擴充，並不等同於 OpenAI 的說話人分離模型。
+說話人分離啟用時是本地 sherpa-onnx 擴充，並不等同於 OpenAI 的說話人分離模型。OpenAI 專用的轉錄選項（如 `gpt-4o-transcribe-diarize`、`response_format=diarized_json`、`include=logprobs`、`chunking_strategy`、`known_speaker_names` 和 `known_speaker_references`）不受支援，並會回傳 `400`。
 
 ```
 OPENAI_BASE_URL=http://您的伺服器IP:9000
@@ -309,7 +309,7 @@ Content-Type: multipart/form-data
 | `model` | 字串 | ✅ | 傳入 `whisper-1`（值被接受，但始終使用目前啟用的模型）。 |
 | `language` | 字串 | — | BCP-47 語言代碼。覆寫本次請求的 `WHISPER_LANGUAGE` 設定。 |
 | `prompt` | 字串 | — | 選用文字，用於引導模型風格或延續前一段內容。 |
-| `response_format` | 字串 | — | 輸出格式，預設為 `json`。請參閱[回應格式](#回應格式)。`stream=true` 時忽略此參數。 |
+| `response_format` | 字串 | — | 輸出格式，預設為 `json`。請參閱[回應格式](#回應格式)。`stream=true` 時忽略此參數。不支援 OpenAI 專用的 `diarized_json`。 |
 | `temperature` | 浮點數 | — | 採樣溫度（0–1），預設為 `0`。 |
 | `stream` | 布林值 | — | 啟用 SSE 串流。為 `true` 時，段落將在解碼時以 `text/event-stream` 事件形式回傳。預設為 `false`。 |
 | `timestamp_granularities[]` | 陣列 | — | 時間戳粒度。值：`word`、`segment`。包含 `word` 時，`verbose_json` 輸出包含頂層 `words` 陣列。預設：`["segment"]`。 |
@@ -448,7 +448,7 @@ POST /v1/audio/translations
 Content-Type: multipart/form-data
 ```
 
-將任意語言的音訊翻譯為英文文字。與 [OpenAI 音訊翻譯端點](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)相容。接受與轉錄端點相同的參數。輸出始終為英文。
+將任意語言的音訊翻譯為英文文字。與 [OpenAI 音訊翻譯端點](https://developers.openai.com/api/reference/resources/audio/subresources/translations/methods/create)相容。接受常見的翻譯參數。輸出始終為英文。
 
 > **注意：** 僅英語（`.en`）模型不支援翻譯。請使用多語言模型（如 `base`、`small`、`large-v3-turbo`）。
 
