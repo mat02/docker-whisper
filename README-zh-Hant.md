@@ -703,7 +703,7 @@ docker exec whisper whisper_manage --downloaddiarize
 
 ## 技術細節
 
-- 基礎映像檔：`:latest` 使用 `python:3.12-slim`（Debian）；`:cuda` 使用 `nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04`
+- 基礎映像檔：`:latest` 使用 `python:3.12-slim`；`:cuda` 使用 `nvidia/cuda`
 - 執行時：Python 3（虛擬環境位於 `/opt/venv`）
 - STT 引擎：[faster-whisper](https://github.com/SYSTRAN/faster-whisper) + CTranslate2（CPU 預設 INT8，CUDA 預設 FP16）
 - API 框架：[FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)

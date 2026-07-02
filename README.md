@@ -703,7 +703,7 @@ docker exec whisper whisper_manage --downloaddiarize
 
 ## Technical details
 
-- Base image: `python:3.12-slim` (Debian) for `:latest`; `nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04` for `:cuda`
+- Base image: `python:3.12-slim` for `:latest`; `nvidia/cuda` for `:cuda`
 - Runtime: Python 3 (virtual environment at `/opt/venv`)
 - STT engine: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) with CTranslate2 (INT8 by default on CPU, FP16 on CUDA)
 - API framework: [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/)
