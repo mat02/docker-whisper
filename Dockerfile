@@ -19,7 +19,8 @@ RUN set -x \
     && apt-get update \
     && apt-get install -y --no-install-recommends curl bzip2 \
     && python3 -m venv /opt/venv \
-    && pip install --no-cache-dir \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --uploaded-prior-to P3D \
          faster-whisper \
          fastapi \
          "uvicorn[standard]" \
