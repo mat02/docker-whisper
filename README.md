@@ -137,7 +137,7 @@ Alternatively, you may [set up Whisper without Docker](https://github.com/hwdsl2
 - NVIDIA GPU with CUDA support (Compute Capability 6.0+)
 - [NVIDIA driver](https://www.nvidia.com/en-us/drivers/) 575.57.08+ (Linux) or 576.57+ (Windows) installed on the host
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
-- The `:cuda` image supports `linux/amd64` only
+- The `:cuda` image builds CTranslate2 with CUDA support from source and can be built for `linux/amd64` and `linux/arm64`. The default `CUDA_ARCH_LIST=9.0+PTX` is suitable for NVIDIA GB10/DGX Spark; set this build arg for other GPU architectures.
 
 For internet-facing deployments, see [Using a reverse proxy](#using-a-reverse-proxy) to add HTTPS.
 
@@ -162,7 +162,7 @@ docker pull quay.io/hwdsl2/whisper-server
 docker image tag quay.io/hwdsl2/whisper-server hwdsl2/whisper-server
 ```
 
-Supported platforms: `linux/amd64` and `linux/arm64`. The `:cuda` tag supports `linux/amd64` only.
+Supported platforms: `linux/amd64` and `linux/arm64`. The `:cuda` image builds CTranslate2 with CUDA support from source so CUDA can also work on ARM64 hosts such as NVIDIA DGX Spark.
 
 ## Environment variables
 

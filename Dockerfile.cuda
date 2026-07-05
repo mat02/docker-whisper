@@ -4,6 +4,37 @@
 # This work is licensed under the MIT License
 # See: https://opensource.org/licenses/MIT
 
+FROM nvidia/cuda:12.9.2-cudnn-devel-ubuntu24.04 AS ct2-build
+
+ARG CTRANSLATE2_VERSION=v4.8.0
+ARG CUDA_ARCH_LIST=9.0+PTX
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       build-essential ca-certificates cmake git python3 python3-dev python3-pip libopenblas-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/build
+RUN git clone --recursive --branch ${CTRANSLATE2_VERSION} https://github.com/OpenNMT/CTranslate2.git
+WORKDIR /opt/build/CTranslate2
+RUN cmake -S . -B build \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DWITH_CUDA=ON \
+      -DWITH_CUDNN=ON \
+      -DWITH_MKL=OFF \
+      -DWITH_OPENBLAS=ON \
+      -DOPENMP_RUNTIME=COMP \
+      -DCUDA_ARCH_LIST=${CUDA_ARCH_LIST} \
+      -DBUILD_CLI=OFF \
+      -DBUILD_TESTS=OFF \
+    && cmake --build build --parallel $(nproc) \
+    && cmake --install build --prefix /opt/ctranslate2
+
+WORKDIR /opt/build/CTranslate2/python
+ENV CTRANSLATE2_ROOT=/opt/ctranslate2
+RUN python3 -m pip install --break-system-packages --no-cache-dir -r install_requirements.txt \
+    && python3 setup.py bdist_wheel
+
 FROM nvidia/cuda:12.9.2-cudnn-runtime-ubuntu24.04
 
 WORKDIR /opt/src
@@ -11,21 +42,29 @@ WORKDIR /opt/src
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
+    LD_LIBRARY_PATH="/opt/ctranslate2/lib:$LD_LIBRARY_PATH" \
+    CTRANSLATE2_ROOT="/opt/ctranslate2" \
     TMPDIR="/run/whisper-temp"
+
+COPY --from=ct2-build /opt/ctranslate2 /opt/ctranslate2
+COPY --from=ct2-build /opt/build/CTranslate2/python/dist/*.whl /tmp/
 
 # faster-whisper decodes audio via the PyAV library (bundled FFmpeg libraries).
 # curl is used by run.sh for the public-IP lookup and the health-check poll.
 RUN set -x \
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl bzip2 python3 python3-venv \
+    && apt-get install -y --no-install-recommends curl bzip2 python3 python3-venv libgomp1 libopenblas0 \
     && python3 -m venv /opt/venv \
     && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir /tmp/ctranslate2-*.whl \
     && pip install --no-cache-dir --uploaded-prior-to P3D \
          faster-whisper \
          fastapi \
          "uvicorn[standard]" \
          python-multipart \
          sherpa-onnx \
+    && pip install --no-cache-dir --force-reinstall /tmp/ctranslate2-*.whl \
+    && rm -f /tmp/ctranslate2-*.whl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && find /opt/venv -name '*.pyi' -delete \
